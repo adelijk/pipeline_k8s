@@ -1,0 +1,47 @@
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/artifact-repo/flask-app:$COMMIT_SHA'
+      - '-f'
+      - 'app/Dockerfile'
+      - 'app/'  # Context directory
+
+
+  # Step 2: Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/artifact-repo/flask-app:$COMMIT_SHA'
+
+  # Step 3: Update the GKE deployment with the new Docker image
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'set'
+      - 'image'
+      - 'deployment/flask-app'
+      - 'flask-app=us-central1-docker.pkg.dev/$PROJECT_ID/artifact-repo/flask-app:$COMMIT_SHA'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=gke-cluste-bd2c'
+
+  # Step 4: Apply changes to Kubernetes manifests if they exist
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'apply'
+      - '-f'
+      - 'k8s/'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=gke-cluste-bd2c'
+
+substitutions:
+  _CLUSTER_NAME: 'gke-cluste-bd2c'
+  _ZONE: 'us-central1-a'
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/artifact-repo/flask-app:$COMMIT_SHA'
+timeout: '900s'
+options:
+  logging: CLOUD_LOGGING_ONLY
