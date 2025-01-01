@@ -17,6 +17,7 @@ spec:
       containers:
         - name: flask-app
           image: us-central1-docker.pkg.dev/triple-grove-438014-p9/artifact-repo/flask-app:$COMMIT_SHA
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
