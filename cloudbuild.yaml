@@ -16,7 +16,18 @@ steps:
       - 'push'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/artifact-repo/flask-app:$COMMIT_SHA'
 
-  # Step 3: Update the GKE deployment with the new Docker image and Apply changes to Kubernetes manifests if they exist
+  # Step 3: Update the GKE deployment with the new Docker image
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'set'
+      - 'image'
+      - 'deployment/flask-app'
+      - 'flask-app=us-central1-docker.pkg.dev/$PROJECT_ID/artifact-repo/flask-app:$COMMIT_SHA'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=gke-cluste-bd2c'
+
+  # Step 4: Apply changes to Kubernetes manifests if they exist
   - name: 'gcr.io/cloud-builders/kubectl'
     args:
       - 'apply'
